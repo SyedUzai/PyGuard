@@ -1,5 +1,6 @@
 import mysql.connector
 def dbconfig():
+    #Connecting with MySql server
     
     try:
         db = mysql.connector.connect(
@@ -14,3 +15,4 @@ def dbconfig():
     return db
 
 
+print(dbconfig())
