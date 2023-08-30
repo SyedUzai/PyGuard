@@ -1,11 +1,16 @@
 import mysql.connector
+def dbconfig():
+    
+    try:
+        db = mysql.connector.connect(
+        host="localhost",
+        user="syeduzai",
+        passwd="Carsham412##",
+        )
 
-db = mysql.connector.connect(
-    host="localhost",
-    user="syeduzai",
-    passwd="Carsham412##",
-    database="testdatabase"
-)
+    except Exception as e:
+        print("Could not connect")
 
-mycursor=db.cursor()
+    return db
+
 
