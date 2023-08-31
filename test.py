@@ -1,11 +1,19 @@
 import mysql.connector
 
+# Replace with your actual database connection details
 db = mysql.connector.connect(
     host="localhost",
     user="root",
-    passwd="Carsham412##"
+    password="Carsham412##",
 )
 
 mycursor = db.cursor()
 
-mycursor.execute("CREATE DATABASE uzaz")
+# Create a new database
+mycursor.execute("CREATE DATABASE tester")
+
+db.commit()
+mycursor.close()
+db.close()
+
+print("Database created successfully!")
