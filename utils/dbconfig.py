@@ -7,7 +7,7 @@ def dbconfig():
          user="syeduzai",
          passwd="Carsham412##",
          )
-        print("Connected to db.")
+        #print("Connected to db.")
 
     except Exception as e:
         print(f'exception occurred: {str(e)}')

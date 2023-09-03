@@ -1,28 +1,67 @@
-# Import the required modules
+
+import base64
 from crypto.Cipher import AES
-from crypto.Util.Padding import pad, unpad
-from crypto.Random import get_random_bytes
-from base64 import b64encode, b64decode
+from crypto.Hash import SHA256
+from crypto import Random
+import sys
 
-# Define the encryption function
-def encrypt_AES_CBC_256(key, password):
-    key_bytes = key.encode('utf-8')
-    message_bytes = password.encode('utf-8')
-    iv = get_random_bytes(AES.block_size)
-    cipher = AES.new(key_bytes, AES.MODE_CBC, iv)
-    padded_message = pad(message_bytes, AES.block_size)
-    ciphertext_bytes = cipher.encrypt(padded_message)
-    ciphertext = b64encode(iv + ciphertext_bytes).decode('utf-8')
-    return ciphertext
+def encrypt(key, source, encode=True, keyType = 'hex'):
+	'''
+	Parameters:
+	key - The key with which you want to encrypt. You can give a key in hex representation (which will then be converted to bytes) or just a normal ascii string. Default is hex
+	source - the message to encrypt
+	encode - whether to encode the output in base64. Default is true
+	keyType - specify the type of key passed
 
-# Define the decryption function
-def decrypt_AES_CBC_256(key, ciphertext):
-    key_bytes = key.encode('utf-8')
-    ciphertext_bytes = b64decode(ciphertext)
-    iv = ciphertext_bytes[:AES.block_size]
-    cipher = AES.new(key_bytes, AES.MODE_CBC, iv)
-    ciphertext_bytes = ciphertext_bytes[AES.block_size:]
-    decrypted_bytes = cipher.decrypt(ciphertext_bytes)
-    plaintext_bytes = unpad(decrypted_bytes, AES.block_size)
-    plaintext = plaintext_bytes.decode('utf-8')
-    return plaintext
+	Returns:
+	Base64 encoded cipher
+	'''
+
+	source = source.encode()
+	if keyType == "hex":
+		 # Convert key (in hex representation) to bytes 
+		key = bytes(bytearray.fromhex(key))
+	# else:
+	# 	# use SHA-256 over our key to get a proper-sized AES key. Outputs in bytes 
+	# 	key = key.encode()
+	# 	key = SHA256.new(key).digest()
+
+	IV = Random.new().read(AES.block_size)  # generate IV
+	encryptor = AES.new(key, AES.MODE_CBC, IV)
+	padding = AES.block_size - len(source) % AES.block_size  # calculate needed padding
+	source += bytes([padding]) * padding  # Python 2.x: source += chr(padding) * padding
+	data = IV + encryptor.encrypt(source)  # store the IV at the beginning and encrypt
+	return base64.b64encode(data).decode() if encode else data
+
+
+def decrypt(key, source, decode=True,keyType="hex"):
+	'''
+	Parameters:
+	key - key to decrypt with. It can either be an ascii string or a string in hex representation. Default is hex representation
+	source - the cipher (or encrypted message) to decrypt
+	decode - whether to first base64 decode the cipher before trying to decrypt with the key. Default is true
+	keyType - specify the type of key passed
+
+	Returns:
+	The decrypted data
+	'''
+
+	source = source.encode()
+	if decode:
+		source = base64.b64decode(source)
+
+	if keyType == "hex":
+		# Convert key to bytes
+		key = bytes(bytearray.fromhex(key))
+	# else:
+	# 	# use SHA-256 over our key to get a proper-sized AES key
+	# 	key = key.encode()
+	# 	key = SHA256.new(key).digest()  
+
+	IV = source[:AES.block_size]  # extract the IV from the beginning
+	decryptor = AES.new(key, AES.MODE_CBC, IV)
+	data = decryptor.decrypt(source[AES.block_size:])  # decrypt
+	padding = data[-1]  # pick the padding value from the end; Python 2.x: ord(data[-1])
+	if data[-padding:] != bytes([padding]) * padding:  # Python 2.x: chr(padding) * padding
+		raise ValueError("Invalid padding...")
+	return data[:-padding]  # remove the padding

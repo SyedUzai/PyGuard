@@ -1,6 +1,6 @@
 from utils.dbconfig import dbconfig
 from getpass import getpass
-from utils.encrypt import encrypt_AES_CBC_256
+import utils.encrypt
 from crypto.Protocol.KDF import PBKDF2
 from crypto.Hash import SHA512
 from crypto.Random import get_random_bytes
@@ -12,18 +12,18 @@ def computeMk(mp,ds):
     key = PBKDF2(password,salt,32,count = 1000000,hmac_hash_module=SHA512)
     return key
 
-def addEntry(mp,secret,sitename,url,email,username):
+def addEntry(mp,secret,sitename,siteurl,email,username):
     # get password from user
     password=getpass("Please type in your password: ")
     mk = computeMk(mp,secret)
-    encrypted = encrypt_AES_CBC_256(mk,password)
+    encrypted = utils.encrypt.encrypt(key=mk,source=password,keyType="bytes")
 
     db= dbconfig()
     mycursor=db.cursor()
     mycursor.execute("USE pyguard")
-    query= "INSERT INTO entries (sitename,url,email,username,password) "
-    val= (sitename,url,username,encrypted)
-    mycursor.execute(query,val)
+    query= "INSERT INTO entries (sitename,siteurl,email,username,password) values (%s,%s,%s,%s,%s)"
+    val= (sitename,siteurl,email,username,encrypted)
+    mycursor.execute(query, val)
     db.commit()
 
     print("Added entry.")
