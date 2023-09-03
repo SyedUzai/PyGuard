@@ -11,6 +11,7 @@ from utils.dbconfig import dbconfig
 
 parser = argparse.ArgumentParser(description='Description')
 
+
 parser.add_argument('option', help='(a)dd / (e)xtract / (g)enerate')
 parser.add_argument("-s", "--name", help="Site name")
 parser.add_argument("-u", "--url", help="Site URL")
